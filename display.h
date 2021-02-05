@@ -31,9 +31,10 @@ public slots:
     void replyErrors(QNetworkReply *reply, const QList<QSslError> &errors);
     void replyAuthenticationRequired(QNetworkReply *reply, QAuthenticator *authenticator);
     void replyencrypted(QNetworkReply *reply);
-    void  replypreSharedKeyAuthenticationRequired(QNetworkReply *reply, QSslPreSharedKeyAuthenticator *authenticator);
-    void  replyproxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator);
+    void replypreSharedKeyAuthenticationRequired(QNetworkReply *reply, QSslPreSharedKeyAuthenticator *authenticator);
+    void replyproxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator);
     void readyRead();
+    void requestError(QNetworkReply::NetworkError);
 private:
     QNetworkAccessManager manager;
     carInformation *car;

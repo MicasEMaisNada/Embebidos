@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
+        <file>cars1.jpg</file>
+        <file>car.jpg</file>
+        <file>Ego-cover.png</file>
     </qresource>
 </RCC>
