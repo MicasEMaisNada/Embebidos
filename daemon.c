@@ -10,9 +10,38 @@
 #include <mqueue.h>   /* mq_* functions */
 #include <signal.h>
 #include <errno.h>
-
+#include <pthread.h>
 #define MSG_Q_NAME "/MY_MSGQ_3"
 #define MAX_MSG_LEN     70
+
+char msgcontent[MAX_MSG_LEN];
+mqd_t msq_id;
+void *sendMessage(void * arg)
+{
+ for(int i = 0; i < 5; ++i)
+  {
+  	snprintf(msgcontent, MAX_MSG_LEN, "My MSG %d",i);
+    //stringstream s;
+    //s << "My Msg " << i;
+
+    if(mq_send(msq_id, msgcontent, strlen(msgcontent)+1, 0) < 0)
+    {
+      if(errno != EAGAIN)
+      {
+        perror ("Error on sending msg on MsgQ ");
+        mq_close(msq_id);
+        exit(1);
+      }
+    }
+    else
+    {
+      printf( "Sent msg %d",i);
+    }
+
+    sleep(1); // Easily see the received message in reader
+  }
+    mq_close(msq_id);
+}
 int main(int argc, char *argv[]){
 	pid_t pid, sid;
 	int len, fd;
@@ -46,14 +75,14 @@ int main(int argc, char *argv[]){
 	close(STDERR_FILENO); // close standard error file descriptor
 
 	len = strlen(ctime(&timebuf));
-	  char msgcontent[MAX_MSG_LEN];
+	  
   struct mq_attr attr;
   memset(&attr, 0, sizeof attr);
   attr.mq_msgsize = 8192;
   attr.mq_flags = 0;
   attr.mq_maxmsg = 10;
 
-  mqd_t msq_id = mq_open(MSG_Q_NAME, O_RDWR | O_CREAT | O_NONBLOCK,
+   msq_id = mq_open(MSG_Q_NAME, O_RDWR | O_CREAT | O_NONBLOCK,
                          0777, &attr);
   if(msq_id == (mqd_t) -1)
   {
@@ -61,31 +90,15 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
+  pthread_t msID;
+  int rms = pthread_create(&msID, NULL, sendMessage, NULL);
+   if (rms)
+   {
+         printf("ERROR; return code from pthread_create()");
+         exit(-1);
+   }
   // Write 5 msgs on message Q
-  for(int i = 0; i < 5; ++i)
-  {
-  	snprintf(msgcontent, MAX_MSG_LEN, "My MSG %d",i);
-    //stringstream s;
-    //s << "My Msg " << i;
-
-    if(mq_send(msq_id, msgcontent, strlen(msgcontent)+1, 0) < 0)
-    {
-      if(errno != EAGAIN)
-      {
-        perror ("Error on sending msg on MsgQ ");
-        mq_close(msq_id);
-        exit(1);
-      }
-    }
-    else
-    {
-      printf( "Sent msg %d",i);
-    }
-
-    sleep(1); // Easily see the received message in reader
-  }
-
-  mq_close(msq_id);
+  
 	while (1) {
 		char *buf = malloc(sizeof(char) + len + 1);
 		if (buf == NULL) {
